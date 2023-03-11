@@ -9,49 +9,58 @@ collection = db["test"]
 
 app = Flask(__name__)
 
+# TO DO:
+
 # collection.find_one_and_replace({"temperature": 100}, {"temperature": 100.5})
 # alert = collection.find(
 #    {"$or": [{"temperature": {"$lt": 95}}, {"temperature": {"$gt": 100.4}}]})
+# ADD TO MAKE ID = 0 IF COLLECTION IS EMPTY
+
+lastID = 0
+results = collection.find({"_id": {"$gt": 0}})
+for result in results:
+    lastID = result["_id"] + 1
 
 
-@app.route('/')
+@ app.route('/')
 def index():
     return render_template('index.html')
 
 
-@app.route('/', methods=['POST'])
+@ app.route('/', methods=['POST'])
 def getValue():
     input = request.form['input']
     if input.__contains__('INS'):
         data = convertI(input)
-        post = {"_id": data[0], "name": data[1], "temperature": data[2]}
+        post = {"_id": lastID, "name": str(
+            data[0]), "temperature": float(data[1])}
         collection.insert_one(post)
     elif input.__contains__('FIND'):
         data = convertF(input)
         results = collection.find({"name": data[1]})
         for result in results:
-            print(result["_id"])
+            print(result["temperature"])
     elif input.__contains__('UPD'):
         data = convertF(input)
-        if (data[1] == "ID"):
-            collection.update_one({"ID": data[2]}, {"$set": {"ID": data[3]}})
-        elif (data[1] == "N"):
+        if (data[1] == "N"):
             collection.update_one({"name": data[2]}, {
                                   "$set": {"name": data[3]}})
         elif (data[1] == "T"):
-            collection.update_one({"temperature": float(data[2])}, {
-                                  "$set": {"temperature": float(data[3])}})
+            sec = int(data[2])
+            three = int(data[3])
+            collection.update_one({"temperature": sec}, {
+                                  "$set": {"temperature": three}})
 
     return render_template('index.html')
 
 
-def convertI(input):
-    input = input.replace('INS', '')
-    return ''.join(input).split(", ")
+def convertI(inp):
+    changed = inp.replace('INS', '')
+    return changed.split()
 
 
-def convertF(input):
-    return ''.join(input).split()
+def convertF(inp):
+    return inp.split()
 
 
 if __name__ == '__main__':
