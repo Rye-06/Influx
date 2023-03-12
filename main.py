@@ -10,10 +10,6 @@ collection = db["test"]
 app = Flask(__name__)
 
 # TO DO:
-
-# collection.find_one_and_replace({"temperature": 100}, {"temperature": 100.5})
-# alert = collection.find(
-#    {"$or": [{"temperature": {"$lt": 95}}, {"temperature": {"$gt": 100.4}}]})
 # ADD TO MAKE ID = 0 IF COLLECTION IS EMPTY
 
 lastID = 0
@@ -31,35 +27,44 @@ def index():
 def getValue():
     input = request.form['input']
     if input.__contains__('INS'):
-        data = convertI(input)
+        data = convert(input)
         post = {"_id": lastID, "name": str(
-            data[0]), "temperature": float(data[1])}
+            data[1]), "temperature": float(data[2])}
         collection.insert_one(post)
     elif input.__contains__('FIND'):
-        data = convertF(input)
-        results = collection.find({"name": data[1]})
-        for result in results:
-            print(result["temperature"])
+        data = convert(input)
+        if (data[1] == "N"):
+            results = collection.find({"name": data[2]})
+            for result in results:
+                print(result["temperature"])
+        elif (data[1] == "T"):
+            firs = float(data[2])
+            results = collection.find({"temperature": firs})
+            for result in results:
+                print(result["name"])
     elif input.__contains__('UPD'):
-        data = convertF(input)
+        data = convert(input)
         if (data[1] == "N"):
             collection.update_one({"name": data[2]}, {
                                   "$set": {"name": data[3]}})
         elif (data[1] == "T"):
-            sec = int(data[2])
-            three = int(data[3])
+            sec = float(data[2])
+            three = float(data[3])
             collection.update_one({"temperature": sec}, {
                                   "$set": {"temperature": three}})
+    elif input.__contains__('AND'):
+        data = convert(input)
+        first = float(data[1])
+        second = float(data[2])
+        results = collection.find(
+            {"$and": [{"temperature": {"$gt": first}}, {"temperature": {"$lt": second}}]})
+        for result in results:
+            print(result["name"])
 
     return render_template('index.html')
 
 
-def convertI(inp):
-    changed = inp.replace('INS', '')
-    return changed.split()
-
-
-def convertF(inp):
+def convert(inp):
     return inp.split()
 
 
